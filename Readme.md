@@ -21,5 +21,5 @@ If you want to modify the code or run it manually:
 
 1. **Clone the repository:**
    ```bash
-   git clone <YOUR_REPO_URL>
+   git clone <https://github.com/AFK-Goblin/BusTClicker>
    cd BusTClicker
