@@ -1,4 +1,5 @@
 import tkinter as tk
+import sys
 from tkinter import messagebox, simpledialog, ttk, filedialog
 import os
 import threading
@@ -13,7 +14,16 @@ from core.recorder import setup_recorder, start_recording
 from core.clicker import start_clicking as core_start_clicking
 
 # Path setup
-_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+#_APP_DIR = os.path.dirname(os.path.abspath(__file__))
+#_DATA_DIR = os.path.join(_APP_DIR, "Data")
+
+if getattr(sys, 'frozen', False):
+    # We are running as an exe
+    _APP_DIR = os.path.dirname(sys.executable)
+else:
+    # We are running as a script
+    _APP_DIR = os.path.dirname(os.path.abspath(__file__))
+
 _DATA_DIR = os.path.join(_APP_DIR, "Data")
 
 class AutoClickerApp:
