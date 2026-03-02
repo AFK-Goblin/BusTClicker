@@ -1,7 +1,5 @@
 from tkinter import messagebox
-import tkinter as tk
 
-# Try to import needed modules
 try:
     from pynput import mouse
     HAS_PYNPUT = True
@@ -11,7 +9,6 @@ except ImportError:
 
 def setup_recorder(app):
     """Set up the recorder functionality"""
-    # Nothing to set up if pynput is not available
     if not HAS_PYNPUT:
         return False
     return True
@@ -19,65 +16,51 @@ def setup_recorder(app):
 def start_recording(app):
     """Start recording mode to capture mouse clicks"""
     if not HAS_PYNPUT:
-        messagebox.showinfo("Info", "Recording requires pynput module. Please install it with: pip install pynput")
+        messagebox.showinfo("Info", "Recording requires pynput. Run: pip install pynput")
         return
         
-    app.is_recording = True
-    app.record_button.configure(text="Stop Recording", style="Warning.TButton")
-    app.status_var.set("Recording mode active. Click on screen to capture location.")
+    app.state["status_msg"].set("Recording mode active. Click on screen to capture location.")
     
     def on_click(x, y, button, pressed):
-        if not pressed or not app.is_recording:
+        # We only care when the mouse is pressed down
+        if not pressed or not app.state.get("is_recording"):
             return True  # Continue listening
         
-        # Get the location when mouse clicked
-        app.root.after(0, lambda: add_new_location_instant(app, x, y))
-        return False  # Stop listener
+        # Route the data back to the main thread securely
+        app.root.after(0, lambda: _save_recorded_location(app, x, y))
+        return False  # Stop the listener thread entirely
         
-    # Start the mouse listener in a separate thread
+    # Start the background listener
     app.record_listener = mouse.Listener(on_click=on_click)
     app.record_listener.daemon = True
     app.record_listener.start()
 
-def add_new_location_instant(app, x, y):
-    """Add a new click location from the recorder"""
-    # Create a new location with default values
+def _save_recorded_location(app, x, y):
+    """Handles data formatting and UI updates strictly on the main thread."""
+    state = app.state
+    
+    # Grab the active group if one is selected
+    grp = state.get("group_filter").get()
+    
     new_location = {
-        "name": f"Location {app.location_counter}",
-        "x": x,
-        "y": y,
-        "click_type": "Left",  # Default to left click
-        "action_type": "click"  # Explicitly mark as click action
+        "name": f"Location {state['location_counter']}",
+        "x": int(x),  # Ensure x/y are clean integers
+        "y": int(y),
+        "click_type": "Left",
+        "action_type": "click",
+        "hold_duration": 1.0,
+        "group": grp if grp != "All Groups" else ""
     }
     
-    # Add default hold duration for future use (won't affect normal clicks)
-    new_location["hold_duration"] = 1.0
+    # Update State
+    state["saved_locations"].append(new_location)
+    state["location_counter"] += 1
+    state["is_recording"] = False
     
-    # Increment the counter for next time
-    app.location_counter += 1
+    # Trigger App-level callbacks to handle the UI and Saving
+    app.ui.update_record_button(recording=False)
+    app.ui.refresh_location_list()
+    app.auto_save()
     
-    # Add to saved locations and update UI
-    app.saved_locations.append(new_location)
-    app.update_location_list()
-    
-    # Import here to avoid circular imports
-    from core.settings import save_locations
-    save_locations(app.saved_locations, app.config_file)
-    
-    # Select the newly added location
-    for item in app.location_tree.get_children():
-        values = app.location_tree.item(item, "values")
-        if values and values[0] == new_location["name"]:
-            app.location_tree.selection_set(item)
-            app.location_tree.see(item)
-            break
-    
-    # Show a brief notification in the status bar
-    app.status_var.set(f"Location added at X: {x}, Y: {y} - Use 'Edit Selected' to customize")
-    
-    # Reset the recording state
-    app.is_recording = False
-    app.record_button.configure(text="Record New Location")
-    
-    # After a delay, return to Ready status
-    app.root.after(3000, lambda: app.status_var.set("Ready"))
+    # Update the status bar
+    state["status_msg"].set(f"Scribed Location at X: {int(x)}, Y: {int(y)}")
