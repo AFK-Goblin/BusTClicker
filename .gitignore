@@ -7,14 +7,14 @@ venv/
 env/
 .venv/
 
-# Environment variables (Sensitive data)
+# Environment variables 
 .env
 data/click_locations.json
 
-# PyInstaller (If you compiled your autoclicker to an .exe)
+# PyInstaller 
 build/
 dist/
 *.spec
 
-# IDE settings (VS Code)
+# IDE settings
 .vscode/

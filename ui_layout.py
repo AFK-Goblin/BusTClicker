@@ -9,11 +9,9 @@ class AutoClickerUI:
         self.callbacks = callbacks
         
         self.root.title("✨ BusTClicker ✨")
-        
-        # --- The Grimoire Menu ---
+
         self.build_menu()
-        
-        # --- Theme: "Eldritch Slate" ---
+
         self.setup_eldritch_theme()
         self.build_layout()
 
@@ -33,7 +31,6 @@ class AutoClickerUI:
         style = ttk.Style()
         style.theme_use('clam')
 
-        # --- Palette: "Ancient Temple" ---
         BG_VOID = "#0f0c0b"
         self.BG_SLATE = "#1c1614"
         BG_INPUT = "#2a221e"
@@ -126,7 +123,7 @@ class AutoClickerUI:
         ttk.Button(actions, text="+", width=3, command=self._prompt_create_group).pack(side=tk.LEFT, padx=(5, 0))
         ttk.Button(actions, text="↓", width=3, command=self._prompt_assign_group).pack(side=tk.LEFT, padx=(5, 0))
 
-        # Treeview Scroll
+        # Scroll
         tree_frame = ttk.Frame(container)
         tree_frame.pack(fill=tk.BOTH, expand=True)
         border = tk.Frame(tree_frame, bg="#594836", bd=1)
